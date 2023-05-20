@@ -1,2 +1,3 @@
 mmu_test
 *.o
+.DS_Store
