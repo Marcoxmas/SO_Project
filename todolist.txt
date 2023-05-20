@@ -3,3 +3,5 @@ if write bit set in ram_frame, it needs to be updated in swap space, if not no n
 more refined testing to prove that swapping works as intended (not random)
 implement required functions, wrap swapping inside MMU_exception function
 place the page table inside ram (beginning) in init function, setting frames affected as unswappable
+
+ADD A LOGGING SYSTEM TO NOT DUMP ALL IN TERMINAL

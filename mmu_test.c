@@ -3,7 +3,7 @@
 #include <time.h>
 #include "mmu.h"
 
-#define MAX_ADDRESSES (1 << 9)
+#define MAX_ADDRESSES (1 << 8) + 1
 
 int main()
 {
