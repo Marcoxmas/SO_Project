@@ -8,9 +8,9 @@ struct FrameList;
 
 #define VIRTUAL_MEMORY_SIZE (1 << VIRTUAL_ADDRESS_NBITS)
 #define PHYSICAL_MEMORY_SIZE (1 << PHYSICAL_ADDRESS_NBITS)
-#define PAGE_FRAME_SIZE (1 << FRAME_PAGE_NBITS)
+#define PAGE_FRAME_SIZE (1 << (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS))
 #define PAGES_NUM (VIRTUAL_MEMORY_SIZE / PAGE_FRAME_SIZE)
-#define PHY_FRAMES_NUM (PHYSICAL_MEMORY_SIZE / PAGE_FRAME_SIZE)
+#define PHY_FRAMES_NUM (PHYSICAL_MEMORY_SIZE / (1 << FRAME_PAGE_NBITS))
 #define PAGE_TABLE_SIZE (PAGES_NUM * (FRAME_PAGE_NBITS + FRAME_FLAGS_NBITS))
 
 #define PAGE_FLAGS_NBITS 4
@@ -86,5 +86,7 @@ MMU initMemory();
 void freeMemory(MMU *mmu);
 PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual);
 void MMU_exception(MMU *mmu, VirtualAddress virtual);
+char *MMU_readByte(MMU *mmu, int pos);
+void MMU_writeByte(MMU *mmu, int pos, char c);
 
 #endif

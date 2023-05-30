@@ -24,6 +24,11 @@ int main()
     {
         PhysicalAddress a = getPhysicalAddress(&mmu, addresses[i]);
         printf("Virtual: 0x%06x, \tPhysical:0x%06x\n", addresses[i].address, a.address);
+        char to_write = 's';
+        printf("Writing %c\n", to_write);
+        MMU_writeByte(&mmu, addresses[i].address, to_write);
+        char *byte = MMU_readByte(&mmu, addresses[i].address);
+        printf("Read byte %c\n", *byte);
     }
     freeMemory(&mmu);
     return 0;
