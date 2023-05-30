@@ -119,10 +119,10 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
 PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
 {
     PhysicalAddress *physical = (PhysicalAddress *)malloc(sizeof(VirtualAddress));
-    int page_number = virtual.address >> FRAME_PAGE_NBITS;
-    int offset = virtual.address & 0xFFF;
+    unsigned int page_number = (virtual.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
+    unsigned int offset = virtual.address & 0xFFFF;
     // printf("DEBUG: PAGE_NUM=%X, OFFSET:%X\n", page_number, offset);
-    // check if frame is swapped out
+    //  check if frame is swapped out
     if (!(mmu->page_table->pages[page_number].flags & Valid))
     {
         printf("Frame swapped out, swapping in...\n");
@@ -135,6 +135,6 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
     printf("Read char: %c\n", c); */
     // adding reference to the frame swapped in
     mmu->swap->ram_frames[page_number] = &(mmu->ram->frames[frame_number]);
-    physical->address = (frame_number << FRAME_PAGE_NBITS) | offset;
+    physical->address = (frame_number << (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) | offset;
     return *physical;
 }

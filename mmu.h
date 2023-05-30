@@ -42,7 +42,7 @@ typedef struct Frame
     uint32_t base : FRAME_PAGE_NBITS;
     uint8_t flags : FRAME_FLAGS_NBITS;
     char data[PAGE_FRAME_SIZE];
-    uint16_t page_number : 12;
+    uint16_t page_number : FRAME_PAGE_NBITS;
 } Frame;
 
 // entry for page table

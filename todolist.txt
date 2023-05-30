@@ -1,7 +1,6 @@
-Implement the swapping mechanism second chance, using the read and write bits
 if write bit set in ram_frame, it needs to be updated in swap space, if not no need
 more refined testing to prove that swapping works as intended (not random)
-implement required functions, wrap swapping inside MMU_exception function
+implement required functions setting the bits correctly
 place the page table inside ram (beginning) in init function, setting frames affected as unswappable
 
 ADD A LOGGING SYSTEM TO NOT DUMP ALL IN TERMINAL
