@@ -110,7 +110,7 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
     }
     // printf("Chose ram frame n. %d to swap out\n", i);
     mmu->page_table->pages[page_number].flags |= Valid;
-    printf("DEBUG: victim frame number: %x\n", victim->base);
+    // printf("DEBUG: victim frame number: %x\n", victim->base);
     mmu->page_table->pages[page_number].frame_number = victim->base;
     // printf("DEBUG: new page flags: %d\n", mmu->page_table->pages[page_number].flags);
     victim->flags &= ~Valid;
@@ -124,19 +124,19 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
     PhysicalAddress *physical = (PhysicalAddress *)malloc(sizeof(VirtualAddress));
     unsigned int page_number = (virtual.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
     unsigned int offset = virtual.address & 0xFFFF;
-    printf("DEBUG: PAGE_NUM=%X, OFFSET:%X\n", page_number, offset);
-    // check if frame is swapped out
-    // printf("DEBUG: old page flags: %d\n", mmu->page_table->pages[page_number].flags);
-    // printf("DEBUG: page valid ? %d\n", mmu->page_table->pages[page_number].flags & Valid);
+    // printf("DEBUG: PAGE_NUM=%X, OFFSET:%X\n", page_number, offset);
+    //  check if frame is swapped out
+    //  printf("DEBUG: old page flags: %d\n", mmu->page_table->pages[page_number].flags);
+    //  printf("DEBUG: page valid ? %d\n", mmu->page_table->pages[page_number].flags & Valid);
     if ((mmu->page_table->pages[page_number].flags & Valid) != 1)
     {
-        printf("Frame swapped out, swapping in...\n");
+        printf("Frame swapped out, swapping in... ----------------------------------------------------------------------------\n");
         // function generates page fault and manages swap out of frame
         MMU_exception(mmu, virtual);
     }
     int frame_number = mmu->page_table->pages[page_number].frame_number;
-    printf("DEBUG: FRAME_NUM=%X\n", frame_number);
-    // adding reference to the frame swapped in
+    // printf("DEBUG: FRAME_NUM=%X\n", frame_number);
+    //  adding reference to the frame swapped in
     mmu->swap->ram_frames[page_number] = &(mmu->ram->frames[frame_number]);
     physical->address = (frame_number << (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) | offset;
     return *physical;
@@ -144,10 +144,13 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
 
 char *MMU_readByte(MMU *mmu, int pos)
 {
+    // getting the 24 least significant bits to convert pos in a virtual address
     VirtualAddress virtual;
     virtual.address = pos & 0xFFFFFF;
+    // call to function to convert virtual in physical, generates page fault if needed
     PhysicalAddress physical = getPhysicalAddress(mmu, virtual);
-    printf("Reading from physical address 0x%x\n", physical.address);
+    // printf("Reading from physical address 0x%x\n", physical.address);
+    // extract frame number and offset from physical address
     int frame_number = (physical.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
     int offset = physical.address & 0xFFFF;
     // printf("DEBUG: max offset: %d\n", PAGE_FRAME_SIZE);
@@ -163,10 +166,11 @@ char *MMU_readByte(MMU *mmu, int pos)
         return NULL;
     }
     Frame *frame = &(mmu->ram->frames[frame_number]);
-    char *byte = &(frame->data[offset]);
+    // return address to copy of byte for safety, can't be modified in main by side effect
+    char byte = frame->data[offset];
     // printf("Read byte %c\n", *byte);
     frame->flags |= Read;
-    return byte;
+    return &byte;
 }
 
 void syncSwap(MMU *mmu, Frame *frame)
@@ -203,6 +207,6 @@ void MMU_writeByte(MMU *mmu, int pos, char c)
     frame->data[offset] = c;
     frame->flags |= Write;
     syncSwap(mmu, frame);
-    printf("DEBUG: just written %c\n", frame->data[offset]);
+    // printf("DEBUG: just written %c\n", frame->data[offset]);
     return;
 }
