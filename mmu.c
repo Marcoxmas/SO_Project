@@ -10,6 +10,7 @@
 
 MMU initMemory()
 {
+    page_faults_num = 0;
     MMU mmu;
     mmu.page_table = (PageTable *)malloc(sizeof(PageTable));
     mmu.swap = (SwapSpace *)malloc(sizeof(SwapSpace));
@@ -55,6 +56,7 @@ MMU initMemory()
 
 void freeMemory(MMU *mmu)
 {
+    printf("Page Faults generated: %d\n", page_faults_num);
     free(mmu->page_table);
     free(mmu->swap);
     free(mmu->ram);
@@ -132,6 +134,7 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
     {
         printf("Frame swapped out, swapping in... ----------------------------------------------------------------------------\n");
         // function generates page fault and manages swap out of frame
+        page_faults_num++;
         MMU_exception(mmu, virtual);
     }
     int frame_number = mmu->page_table->pages[page_number].frame_number;
@@ -182,7 +185,7 @@ void syncSwap(MMU *mmu, Frame *frame)
         swap->frames[frame->page_number].data[i] = frame->data[i];
     }
     frame->flags &= ~Write;
-    printf("Swap space synced!\n");
+    // printf("Swap space synced!\n");
 }
 
 void MMU_writeByte(MMU *mmu, int pos, char c)
@@ -190,7 +193,7 @@ void MMU_writeByte(MMU *mmu, int pos, char c)
     VirtualAddress virtual;
     virtual.address = pos & 0xFFFFFF;
     PhysicalAddress physical = getPhysicalAddress(mmu, virtual);
-    printf("Writing %c to physical address 0x%x\n", c, physical.address);
+    // printf("Writing %c to physical address 0x%x\n", c, physical.address);
     int frame_number = (physical.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
     int offset = physical.address & 0xFFFF;
     if (frame_number < 0 || frame_number >= PHY_FRAMES_NUM)

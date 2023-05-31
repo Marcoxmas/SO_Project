@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "framelist.h"
 
+uint16_t page_faults_num;
 struct FrameList;
 
 #define VIRTUAL_MEMORY_SIZE (1 << VIRTUAL_ADDRESS_NBITS)
