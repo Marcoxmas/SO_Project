@@ -47,15 +47,16 @@ int main(int argc, char *argv[])
             printf("0x%06x,\t", randomAddresses[i].address);
         }
         printf("\n");
-        // only tests writing to not focus on page faults
+        // only tests writing to focus on page faults
         for (unsigned long long i = 0; i < MAX_ADDRESSES; i++)
         {
             // PhysicalAddress a = getPhysicalAddress(&mmu, randomAddresses[i]);
             // printf("Virtual: 0x%06x, \tPhysical:0x%06x\n", randomAddresses[i].address, a.address);
             char to_write = 's';
             // printf("Writing %c\n", to_write);
+            // printf("%llu ", i);
             MMU_writeByte(&mmu, randomAddresses[i].address, to_write);
-            /* DECOMMENT THIS TO VERIFY THAT AL THE SS ARE WRITTEN */
+            /* DECOMMENT THIS TO VERIFY THAT AL THE S'S ARE WRITTEN */
             // char *byte = MMU_readByte(&mmu, randomAddresses[i].address);
             // printf("%c", *byte);
         }
@@ -97,6 +98,7 @@ int main(int argc, char *argv[])
     loremIpsum[fileSize] = '\0';
     fclose(file);
     // writing the first whatever characters of lorem ipsum text
+    printf("Writing starting from 0x%06x, to 0x%06x\n", sequentialAddresses[0].address, sequentialAddresses[(SEQ_ADDRESSES)-1].address);
     for (int i = 0; i < SEQ_ADDRESSES; i++)
     {
         MMU_writeByte(&mmu, sequentialAddresses[i].address, loremIpsum[i]);
