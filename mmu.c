@@ -147,6 +147,7 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
         printf("Frame swapped out, swapping in... ----------------------------------------------------------------------------\n");
         // function generates page fault and manages swap out of frame
         page_faults_num++;
+        printf("Page fault no. %d\n", page_faults_num);
         MMU_exception(mmu, virtual);
     }
     int frame_number = mmu->page_table->pages[page_number].frame_number;
