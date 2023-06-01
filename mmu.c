@@ -50,6 +50,14 @@ MMU initMemory()
         memset(mmu.ram->frames[i].data, 0, PAGE_FRAME_SIZE);
         pushFrame(mmu.ram->free_frames, &(mmu.ram->frames[i]));
     }
+    // simulate page table in ram by declaring the affected frames not free and unswappable
+    int frames_affected = ((FRAME_PAGE_NBITS + FRAME_FLAGS_NBITS) * PAGES_NUM) / PAGE_FRAME_SIZE;
+    // printf("Affected frames: %d\n", frames_affected);
+    for (int i = 0; i < frames_affected; i++)
+    {
+        Frame *affected = popFrame(mmu.ram->free_frames);
+        affected->flags |= Unswappable;
+    }
 
     return mmu;
 }
@@ -78,15 +86,22 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
     {
         victim = &(mmu->ram->frames[i++]);
         uint8_t flags = victim->flags;
-        printf("Frame n.%d flags:%d\n", i - 1, flags);
+        if (i == PHY_FRAMES_NUM - 1)
+        {
+            printf("%d; resetting\n", i);
+            i = 0;
+            continue;
+        }
         if (flags & Unswappable)
         {
+            // printf("Unswappable!\n");
             continue;
         }
         // If the read bit is 0 and the write bit is 0, indicating that the page has not been recently accessed and is not modified, the page is selected for replacement.
         if (((flags & Read) == 0) && ((flags & Write) == 0))
         {
             printf("Frame not recently used found!\n");
+            printf("Frame n.%d flags:%d\n", i - 1, flags);
             mmu->swap->ram_frames[page_number] = NULL;
             chosen = 1;
             continue;
@@ -94,6 +109,7 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
         // If the read bit is 1, indicating that the page has been accessed recently, the read bit is cleared (set to 0), move on to the next page
         if (flags & Read)
         {
+            printf("Frame recently used! Second chance\n");
             victim->flags &= ~Read;
             continue;
         }
@@ -102,11 +118,6 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
         if (flags & Write)
         {
             victim->flags |= Read;
-            continue;
-        }
-        if (i > PHY_FRAMES_NUM - 1)
-        {
-            i = 0;
             continue;
         }
     }
@@ -125,7 +136,7 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
 {
     PhysicalAddress *physical = (PhysicalAddress *)malloc(sizeof(VirtualAddress));
     unsigned int page_number = (virtual.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
-    unsigned int offset = virtual.address & 0xFFFF;
+    unsigned int offset = virtual.address & 0xFFF;
     // printf("DEBUG: PAGE_NUM=%X, OFFSET:%X\n", page_number, offset);
     //  check if frame is swapped out
     //  printf("DEBUG: old page flags: %d\n", mmu->page_table->pages[page_number].flags);
@@ -155,7 +166,7 @@ char *MMU_readByte(MMU *mmu, int pos)
     // printf("Reading from physical address 0x%x\n", physical.address);
     // extract frame number and offset from physical address
     int frame_number = (physical.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
-    int offset = physical.address & 0xFFFF;
+    int offset = physical.address & 0xFFF;
     // printf("DEBUG: max offset: %d\n", PAGE_FRAME_SIZE);
     // printf("DEBUG: frame number: %d, offset: %d\n", frame_number, offset);
     if (frame_number < 0 || frame_number >= PHY_FRAMES_NUM)
@@ -196,7 +207,7 @@ void MMU_writeByte(MMU *mmu, int pos, char c)
     PhysicalAddress physical = getPhysicalAddress(mmu, virtual);
     // printf("Writing %c to physical address 0x%x\n", c, physical.address);
     int frame_number = (physical.address >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
-    int offset = physical.address & 0xFFFF;
+    int offset = physical.address & 0xFFF;
     if (frame_number < 0 || frame_number >= PHY_FRAMES_NUM)
     {
         printf("Invalid frame number.\n");
@@ -211,6 +222,6 @@ void MMU_writeByte(MMU *mmu, int pos, char c)
     frame->data[offset] = c;
     frame->flags |= Write;
     syncSwap(mmu, frame);
-    // printf("DEBUG: just written %c\n", frame->data[offset]);
+    //  printf("DEBUG: just written %c\n", frame->data[offset]);
     return;
 }

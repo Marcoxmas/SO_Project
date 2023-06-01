@@ -3,7 +3,7 @@
 #include <time.h>
 #include "mmu.h"
 
-#define SEQ_ADDRESSES 1 << 7
+#define SEQ_ADDRESSES 1 << 11
 #define SEQ_ADDRESSES_PF 1 << 20
 
 int main(int argc, char *argv[])
@@ -124,6 +124,11 @@ int main(int argc, char *argv[])
     fflush(stdout);
     for (int i = 0; i < SEQ_ADDRESSES_PF; i++)
     {
+        char *byte = MMU_readByte(&mmu, sequentialPfAddresses[i].address);
+        free(byte);
+    }
+    for (int i = 0; i < SEQ_ADDRESSES_PF; i++)
+    {
         MMU_writeByte(&mmu, sequentialPfAddresses[i].address, loremIpsum[i]);
     }
     printf("Reading from memory...\n");
@@ -133,6 +138,7 @@ int main(int argc, char *argv[])
         printf("%c", *byte);
         free(byte);
     }
+    printf("\n");
     free(loremIpsum);
     freeMemory(&mmu);
     return 0;
