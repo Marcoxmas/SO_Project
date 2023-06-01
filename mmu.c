@@ -86,7 +86,7 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
     {
         victim = &(mmu->ram->frames[i++]);
         uint8_t flags = victim->flags;
-        if (i == PHY_FRAMES_NUM - 1)
+        if (i == PHY_FRAMES_NUM)
         {
             printf("%d; resetting\n", i);
             i = 0;
@@ -94,7 +94,7 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
         }
         if (flags & Unswappable)
         {
-            // printf("Unswappable!\n");
+            printf("Unswappable!\n");
             continue;
         }
         // If the read bit is 0 and the write bit is 0, indicating that the page has not been recently accessed and is not modified, the page is selected for replacement.
@@ -110,6 +110,7 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
         if (flags & Read)
         {
             printf("Frame recently used! Second chance\n");
+            printf("Frame n.%d flags:%d\n", i - 1, flags);
             victim->flags &= ~Read;
             continue;
         }

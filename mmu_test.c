@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     {
         MMU_writeByte(&mmu, sequentialAddresses[i].address, loremIpsum[i]);
     }
-    // reading from memory, this shouldn't generate page faults ad should print the first 128 characters of lorem ipsum
+    // reading from memory, this shouldn't generate page faults ad should print the first characters of lorem ipsum
     printf("Reading from memory...\n");
     for (int i = 0; i < SEQ_ADDRESSES; i++)
     {
@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
     }
     printf("Writing starting from 0x%06x, to 0x%06x\n", sequentialPfAddresses[0].address, sequentialPfAddresses[(SEQ_ADDRESSES_PF)-1].address);
     fflush(stdout);
+    // reading nothing to test that second chance works
     for (int i = 0; i < SEQ_ADDRESSES_PF; i++)
     {
         char *byte = MMU_readByte(&mmu, sequentialPfAddresses[i].address);
@@ -132,12 +133,13 @@ int main(int argc, char *argv[])
         MMU_writeByte(&mmu, sequentialPfAddresses[i].address, loremIpsum[i]);
     }
     printf("Reading from memory...\n");
-    for (int i = 0; i < SEQ_ADDRESSES_PF; i++)
+    // DECOMMENT HERE TO PROVE THAT ACTUALLY WRITTEN SOMETHING
+    /* for (int i = 0; i < SEQ_ADDRESSES_PF; i++)
     {
         char *byte = MMU_readByte(&mmu, sequentialPfAddresses[i].address);
         printf("%c", *byte);
         free(byte);
-    }
+    } */
     printf("\n");
     free(loremIpsum);
     freeMemory(&mmu);
