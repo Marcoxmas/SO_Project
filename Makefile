@@ -17,3 +17,6 @@ mmu_test.o: mmu_test.c mmu.h
 
 clean:
 	rm -f mmu_test *.o
+
+valgrind: CFLAGS += -g
+valgrind: clean mmu_test

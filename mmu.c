@@ -170,10 +170,11 @@ char *MMU_readByte(MMU *mmu, int pos)
     }
     Frame *frame = &(mmu->ram->frames[frame_number]);
     // return address to copy of byte for safety, can't be modified in main by side effect
-    char byte = frame->data[offset];
+    char *byte = malloc(1);
+    *byte = frame->data[offset];
     // printf("Read byte %c\n", *byte);
     frame->flags |= Read;
-    return &byte;
+    return byte;
 }
 
 void syncSwap(MMU *mmu, Frame *frame)

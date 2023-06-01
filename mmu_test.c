@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
             /* DECOMMENT THIS TO VERIFY THAT AL THE S'S ARE WRITTEN */
             // char *byte = MMU_readByte(&mmu, randomAddresses[i].address);
             // printf("%c", *byte);
+            // free(byte);
         }
         printf("\n");
         free(randomAddresses);
@@ -109,6 +110,7 @@ int main(int argc, char *argv[])
     {
         char *byte = MMU_readByte(&mmu, sequentialAddresses[i].address);
         printf("%c", *byte);
+        free(byte);
     }
     printf("\n");
     printf("\n\n\nSequential with page faults, starting from last address used\n");
@@ -129,6 +131,7 @@ int main(int argc, char *argv[])
     {
         char *byte = MMU_readByte(&mmu, sequentialPfAddresses[i].address);
         printf("%c", *byte);
+        free(byte);
     }
     free(loremIpsum);
     freeMemory(&mmu);
