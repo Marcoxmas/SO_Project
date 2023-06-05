@@ -3,19 +3,10 @@
 #include <stdint.h>
 #include "constants.h"
 #include "framelist.h"
+#include "arraylist.h"
 
 uint16_t page_faults_num;
 struct FrameList;
-
-#define VIRTUAL_MEMORY_SIZE (1 << VIRTUAL_ADDRESS_NBITS)
-#define PHYSICAL_MEMORY_SIZE (1 << PHYSICAL_ADDRESS_NBITS)
-#define PAGE_FRAME_SIZE (1 << (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS))
-#define PAGES_NUM (VIRTUAL_MEMORY_SIZE / (1 << FRAME_PAGE_NBITS))
-#define PHY_FRAMES_NUM (PHYSICAL_MEMORY_SIZE / (1 << FRAME_PAGE_NBITS))
-#define PAGE_TABLE_SIZE (PAGES_NUM * (FRAME_PAGE_NBITS + FRAME_FLAGS_NBITS))
-
-#define PAGE_FLAGS_NBITS 4
-#define FRAME_FLAGS_NBITS 4
 
 // FLAGS for pages
 typedef enum
@@ -56,7 +47,7 @@ typedef struct PageEntry
 // ram, physical memory, list of frames with reference to raw memory fd
 typedef struct RAM
 {
-    struct FrameList *free_frames;
+    struct ArrayList *free_frames;
     Frame frames[PHY_FRAMES_NUM]; // lista di frame
     uint32_t n_frames;            // numero di frame
 } RAM;

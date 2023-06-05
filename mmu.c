@@ -1,5 +1,7 @@
 #include "mmu.h"
 #include "framelist.h"
+#include "arraylist.h"
+#include "constants.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -39,8 +41,8 @@ MMU initMemory()
     // Initialize RAM
     printf("init RAM\n");
     mmu.ram->n_frames = PHY_FRAMES_NUM;
-    mmu.ram->free_frames = malloc(sizeof(FrameList));
-    initializeFrameList(mmu.ram->free_frames);
+    mmu.ram->free_frames = malloc(sizeof(ArrayList));
+    initialize(mmu.ram->free_frames);
     for (int i = 0; i < PHY_FRAMES_NUM; i++)
     {
         mmu.ram->frames[i].base = (i * PAGE_FRAME_SIZE >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
@@ -48,14 +50,14 @@ MMU initMemory()
         mmu.ram->frames[i].flags = Valid; // in ram valid stands for free
         mmu.ram->frames[i].page_number = -1;
         memset(mmu.ram->frames[i].data, 0, PAGE_FRAME_SIZE);
-        pushFrame(mmu.ram->free_frames, &(mmu.ram->frames[i]));
+        append(mmu.ram->free_frames, &(mmu.ram->frames[i]));
     }
-    // simulate page table in ram by declaring the affected frames not free and unswappable
-    int frames_affected = ((FRAME_PAGE_NBITS + FRAME_FLAGS_NBITS) * PAGES_NUM) / PAGE_FRAME_SIZE;
-    // printf("Affected frames: %d\n", frames_affected);
+    // simulate page table + arraylist in ram by declaring the affected frames not free and unswappable
+    int frames_affected = (((FRAME_PAGE_NBITS + FRAME_FLAGS_NBITS) * PAGES_NUM) + sizeof(Frame *) * PHY_FRAMES_NUM) / PAGE_FRAME_SIZE;
+    printf("Affected frames: %d\n", frames_affected);
     for (int i = 0; i < frames_affected; i++)
     {
-        Frame *affected = popFrame(mmu.ram->free_frames);
+        Frame *affected = pop(mmu.ram->free_frames);
         affected->flags |= Unswappable;
     }
 
@@ -76,9 +78,9 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
     int i = 0, chosen = 0;
     // check if there are any free frames first
     Frame *victim;
-    if (!isFrameListEmpty(mmu->ram->free_frames))
+    if (!isEmpty(mmu->ram->free_frames))
     {
-        victim = popFrame(mmu->ram->free_frames);
+        victim = pop(mmu->ram->free_frames);
         printf("Free frame found!\n");
         chosen = 1;
     }
