@@ -1,5 +1,4 @@
 #include "mmu.h"
-#include "framelist.h"
 #include "arraylist.h"
 #include "constants.h"
 #include <stdio.h>
@@ -15,7 +14,7 @@ MMU initMemory()
     page_faults_num = 0;
     MMU mmu;
     mmu.page_table = (PageTable *)malloc(sizeof(PageTable));
-    mmu.swap = (SwapSpace *)malloc(sizeof(SwapSpace));
+    mmu.swap = fopen("swap_space.bin", "w+"); // reset the file at each start of the program
     mmu.ram = (RAM *)malloc(sizeof(RAM));
     printf("init page table\n");
     // Initialize page table
@@ -28,7 +27,7 @@ MMU initMemory()
     }
     printf("init swap\n");
     // Initialize swap space
-    mmu.swap->n_frames = PAGES_NUM;
+    /* mmu.swap->n_frames = PAGES_NUM;
     for (int i = 0; i < PAGES_NUM; i++)
     {
         mmu.swap->frames[i].base = (i * PAGE_FRAME_SIZE >> (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) & 0xFF;
@@ -36,6 +35,12 @@ MMU initMemory()
         mmu.swap->frames[i].flags = 0;
         mmu.swap->frames[i].page_number = i;
         mmu.swap->ram_frames[i] = (Frame *)malloc(sizeof(Frame)); // if swapped in this points to the relative frame in ram
+    } */
+    char zero = 0;
+    fseek(mmu.swap, 0, SEEK_SET);
+    for (int i = 0; i < VIRTUAL_MEMORY_SIZE; i++)
+    {
+        fwrite(&zero, sizeof(char), 1, mmu.swap);
     }
 
     // Initialize RAM
@@ -68,7 +73,7 @@ void freeMemory(MMU *mmu)
 {
     printf("Page Faults generated: %d\n", page_faults_num);
     free(mmu->page_table);
-    free(mmu->swap);
+    fclose(mmu->swap);
     free(mmu->ram);
 }
 
@@ -104,7 +109,6 @@ void MMU_exception(MMU *mmu, VirtualAddress virtual)
         {
             printf("Frame not recently used found!\n");
             printf("Frame n.%d flags:%d\n", i - 1, flags);
-            mmu->swap->ram_frames[page_number] = NULL;
             chosen = 1;
             continue;
         }
@@ -154,8 +158,6 @@ PhysicalAddress getPhysicalAddress(MMU *mmu, VirtualAddress virtual)
     }
     int frame_number = mmu->page_table->pages[page_number].frame_number;
     // printf("DEBUG: FRAME_NUM=%X\n", frame_number);
-    //  adding reference to the frame swapped in
-    mmu->swap->ram_frames[page_number] = &(mmu->ram->frames[frame_number]);
     physical->address = (frame_number << (VIRTUAL_ADDRESS_NBITS - FRAME_PAGE_NBITS)) | offset;
     return *physical;
 }
@@ -195,10 +197,10 @@ char *MMU_readByte(MMU *mmu, int pos)
 void syncSwap(MMU *mmu, Frame *frame)
 {
     // copy written data to swap and reset Write bit, no longer desynced
-    SwapSpace *swap = mmu->swap;
+    fseek(mmu->swap, frame->page_number, SEEK_SET);
     for (int i = 0; i < PAGE_FRAME_SIZE; i++)
     {
-        swap->frames[frame->page_number].data[i] = frame->data[i];
+        fwrite(&(frame->data[i]), sizeof(char), 1, mmu->swap);
     }
     frame->flags &= ~Write;
     // printf("Swap space synced!\n");

@@ -1,8 +1,8 @@
 #ifndef MMU_H
 #define MMU_H
 #include <stdint.h>
+#include <stdio.h>
 #include "constants.h"
-#include "framelist.h"
 #include "arraylist.h"
 
 uint16_t page_faults_num;
@@ -70,7 +70,7 @@ typedef struct PageTable
 typedef struct MMU
 {
     PageTable *page_table;
-    SwapSpace *swap;
+    FILE *swap;
     RAM *ram;
 } MMU;
 
